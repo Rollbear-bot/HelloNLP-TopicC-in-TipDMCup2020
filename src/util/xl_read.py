@@ -52,3 +52,27 @@ def read_labels_by_lines(path: str):
         row_tuple = tuple(map(lambda x: x.value, r))
         rows.append(row_tuple)
     return rows
+
+
+@timer
+def read_xl_by_line(path: str, skip_first_line=True):
+    """
+    读取表（通用）
+    :param path: excel文件路径
+    :param skip_first_line: 是否跳过首行
+    :return: 列表，元素为n元组
+    """
+    res_rows = []
+    wb = openpyxl.load_workbook(path, read_only=True)
+    ws = wb[wb.sheetnames[0]]
+
+    if skip_first_line:
+        row = ws[2:ws.max_row]  # 跳过第一行（表头）
+    else:
+        row = ws[1:ws.max_row]
+
+    for r in row:
+        # 将openpyxl的内置对象转化为元组
+        row_tuple = tuple(map(lambda x: x.value, r))
+        res_rows.append(row_tuple)
+    return res_rows
