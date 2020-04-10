@@ -45,6 +45,10 @@ class Comm(object):
 
     def cut(self, cut_all=False, stop_words_lt=None):
         """分词并去停用词"""
+        # 跳过无意义的行
+        if self.comm_id is None:
+            return
+
         # 分别对主题、详情、回复字段分词
         self.seg_topic = jieba.lcut(self.topic, cut_all=cut_all)
         self.seg_detail = jieba.lcut(self.detail, cut_all=cut_all)
