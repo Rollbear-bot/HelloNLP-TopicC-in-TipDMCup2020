@@ -74,5 +74,7 @@ def read_xl_by_line(path: str, skip_first_line=True):
     for r in row:
         # 将openpyxl的内置对象转化为元组
         row_tuple = tuple(map(lambda x: x.value, r))
+        if row_tuple[0] is None:  # 到达空行时退出
+            break
         res_rows.append(row_tuple)
     return res_rows
