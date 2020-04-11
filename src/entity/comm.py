@@ -58,16 +58,9 @@ class Comm(object):
         # 去停用词
         if stop_words_lt is not None:
             # 扫描主题
-            for index, word in enumerate(self.seg_topic):
-                if word in stop_words_lt:
-                    # 若扫描到一个词在停用词表中，则剔除这个词
-                    self.seg_topic.pop(index)
+            self.seg_topic = [word for word in self.seg_topic if word not in stop_words_lt]
             # 扫描详情
-            for index, word in enumerate(self.seg_detail):
-                if word in stop_words_lt:
-                    self.seg_detail.pop(index)
+            self.seg_detail = [word for word in self.detail if word not in stop_words_lt]
             # 扫描回复
-            if self.seg_reply is not None:
-                for index, word in enumerate(self.seg_reply):
-                    if word in stop_words_lt:
-                        self.seg_reply.pop(index)
+            if self.reply is not None:
+                self.seg_reply = [word for word in self.reply if word not in stop_words_lt]
