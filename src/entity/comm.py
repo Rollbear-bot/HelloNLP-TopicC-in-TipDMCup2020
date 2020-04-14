@@ -99,3 +99,16 @@ class Comm(object):
                 reply_vec.append(word_vec)
             vec.append(reply_vec)
         return np.array(vec, dtype=np.float64)
+
+    # 从行生成Comm字典的方法
+    @classmethod
+    def generate_comm_dict(cls, row_lt, cut_all=False, stop_words_lt=None):
+        """从数据行生成key为留言编号，value为Comm对象的字典
+        并对字典中的Comm对象执行分词、去停用词等预处理"""
+        comm_dict = {}
+        for row in row_lt:
+            c = Comm()
+            c.load_from_row(row)
+            c.cut(cut_all=cut_all, stop_words_lt=stop_words_lt)
+            comm_dict[row[0]] = c
+        return comm_dict
