@@ -4,8 +4,11 @@
 # @Filename: comm.py
 
 import jieba
+import numpy as np
 
 
+# 建立“留言”对象，映射表中的每一行（留言）
+# 同时储存分词、标签等处理结果
 class Comm(object):
     """留言"""
 
@@ -31,17 +34,17 @@ class Comm(object):
         if len(row) == 6:
             # 六元组是附件二的格式
             self.comm_id, self.user_id, self.topic, \
-                self.date, self.detail, self.fir_lev_label = row
+            self.date, self.detail, self.fir_lev_label = row
         if len(row) == 7:
             # 附件三和附件四都是七元组
             if isinstance(row[5], int):
                 # 附件三的第六列是点赞数，是整型数据
                 self.comm_id, self.user_id, self.topic, \
-                    self.date, self.detail, self.likes, self.treads = row
+                self.date, self.detail, self.likes, self.treads = row
             else:
                 # 附件四
                 self.comm_id, self.user_id, self.topic, \
-                    self.date, self.detail, self.reply, self.reply_date = row
+                self.date, self.detail, self.reply, self.reply_date = row
 
     def cut(self, cut_all=False, stop_words_lt=None):
         """分词并去停用词"""
@@ -60,7 +63,39 @@ class Comm(object):
             # 扫描主题
             self.seg_topic = [word for word in self.seg_topic if word not in stop_words_lt]
             # 扫描详情
-            self.seg_detail = [word for word in self.detail if word not in stop_words_lt]
+            self.seg_detail = [word for word in self.seg_detail if word not in stop_words_lt]
             # 扫描回复
             if self.reply is not None:
-                self.seg_reply = [word for word in self.reply if word not in stop_words_lt]
+                self.seg_reply = [word for word in self.seg_reply if word not in stop_words_lt]
+
+    def get_vec(self, model):
+        """计算词向量"""
+        vec = []
+        topic_vec = []
+        detail_vec = []
+
+        for word in self.seg_topic:
+            try:
+                word_vec = model[word]
+            except KeyError:  # 跳过未登录词
+                continue
+            topic_vec.append(word_vec)
+        for word in self.seg_detail:
+            try:
+                word_vec = model[word]
+            except KeyError:  # 跳过未登录词
+                continue
+            detail_vec.append(word_vec)
+        vec.append(topic_vec)
+        vec.append(detail_vec)
+
+        if self.seg_reply is not None:
+            reply_vec = []
+            for word in self.seg_reply:
+                try:
+                    word_vec = model[word]
+                except KeyError:  # 跳过未登录词
+                    continue
+                reply_vec.append(word_vec)
+            vec.append(reply_vec)
+        return np.array(vec, dtype=np.float64)
