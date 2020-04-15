@@ -4,6 +4,8 @@
 # @Filename: from_word2vec_to_knn.py
 # 如何完成从Word2Vec向量到KNN的输入矩阵的转换？
 
+import time
+
 import sklearn
 from gensim.models import Word2Vec
 from gensim.models.word2vec import LineSentence
@@ -37,12 +39,12 @@ def get_doc_vec(doc: list, model):
 def main():
     # -----------------调参窗口------------------
     # 列出要尝试的所有参数取值
-    wv_size_lt = [400]
-    wv_window_lt = [5]
-    wv_sg_lt = [1, 0]
-    wv_min_count_lt = [4, 5, 6]
-    knn_leaf_size_lt = [30]
-    knn_n_neighbors_lt = [5]
+    wv_size_lt = [500]  # list(range(300, 800, 50))
+    wv_window_lt = [18]  # list(range(3, 21, 3))
+    wv_sg_lt = [1]
+    wv_min_count_lt = [8]  # list(range(1, 9))
+    knn_leaf_size_lt = [40]  # list(range(20, 50, 10))
+    knn_n_neighbors_lt = [9]  # list(range(3, 10, 3))
 
     # 填充参数
     params = []
@@ -113,6 +115,9 @@ def main():
               + f"Accuracy: {accuracy}\n"
         logs.append([log, accuracy, str(param)])
 
+        # 输出完整报告
+        print(metrics.classification_report(y_test, predicted, target_names=target_names))
+
         # 将测试结果输出到控制台
         print(log)
 
@@ -121,10 +126,11 @@ def main():
     file.writelines([log[0] for log in logs])
 
     # 计算所测试的参数组合中的最优解，生成测试报告
-    logs = sorted(logs, key=lambda x: x[1])  # 按准确率排序
-    report = "[REPORT] Top 3:\n"
-    for log in logs[:3]:
+    logs_sorted = sorted(logs, key=lambda x: -x[1])  # 按准确率排序
+    report = "\n[REPORT] Top 10:\n"
+    for log in logs_sorted[:10]:
         report += f"Accuracy: {log[1]}\nParam: {log[2]}\n"
+    report += str(time.asctime(time.localtime(time.time())))  # 结束时打上时间戳
     file.write(report)
     file.close()
 
