@@ -15,36 +15,18 @@ from sklearn.neighbors import KNeighborsClassifier  # 最近邻分类器
 import util.txt_read
 import util.xl_read
 from entity.comm import Comm
-
-
-# 计算文档向量的方法
-def get_doc_vec(doc: list, model):
-    """计算文档向量"""
-    ignore = ["\t", " ", "\n"]
-    words = [word for word in doc if word not in ignore]
-    # 所有词向量求和并除以词数量
-    words_num = len(words)
-    # print(words_num)
-    vec_sum = 0
-    for word in words:
-        try:
-            vec_sum += model.wv[word]
-        except KeyError:
-            words_num -= 1
-            continue
-    # print(words_num)
-    return vec_sum / words_num
+from util.vec import get_doc_vec
 
 
 def main():
     # -----------------调参窗口------------------
     # 列出要尝试的所有参数取值
-    wv_size_lt = [500]  # list(range(300, 800, 50))
-    wv_window_lt = [18]  # list(range(3, 21, 3))
+    wv_size_lt = [400]  # list(range(300, 800, 50))
+    wv_window_lt = [24, 27]  # list(range(3, 21, 3))
     wv_sg_lt = [1]
-    wv_min_count_lt = [8]  # list(range(1, 9))
-    knn_leaf_size_lt = [40]  # list(range(20, 50, 10))
-    knn_n_neighbors_lt = [9]  # list(range(3, 10, 3))
+    wv_min_count_lt = [12]  # list(range(1, 9))
+    knn_leaf_size_lt = [20, 40]  # list(range(20, 50, 10))
+    knn_n_neighbors_lt = [6, 10, 12]  # list(range(3, 10, 3))
 
     # 填充参数
     params = []
@@ -65,7 +47,7 @@ def main():
     # ------------------------------------------
 
     # 读取表2
-    comments = util.xl_read.read_xl_by_line("../xls/e2.xlsx")
+    comments = util.xl_read.read_xl_by_line("../resources/xls/e2.xlsx")
 
     # 分词、去停用词并生成表2的评论对象字典
     stop_words = util.txt_read.load_word_list("../resources/special-words/stop_words.txt")
@@ -122,7 +104,7 @@ def main():
         print(log)
 
     # 所有参数组合的测试结束后，输出日志到文本文件
-    file = open("./test_model_log.txt", 'w', encoding='utf8')
+    file = open("../tests/test_model_log.txt", 'w', encoding='utf8')
     file.writelines([log[0] for log in logs])
 
     # 计算所测试的参数组合中的最优解，生成测试报告
