@@ -104,7 +104,7 @@ def main():
         print(log)
 
     # 所有参数组合的测试结束后，输出日志到文本文件
-    file = open("../tests/test_model_log.txt", 'w', encoding='utf8')
+    file = open("./test_model_log.txt", 'w', encoding='utf8')
     file.writelines([log[0] for log in logs])
 
     # 计算所测试的参数组合中的最优解，生成测试报告
