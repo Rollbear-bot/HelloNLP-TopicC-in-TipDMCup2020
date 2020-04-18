@@ -6,7 +6,7 @@
 
 import pandas as pd  # 矩阵处理工具
 from gensim.models import Word2Vec  # Word2Vec词嵌入模型
-from sklearn.cluster import KMeans  # k-means模型
+from sklearn.cluster import AffinityPropagation  # AP聚类
 
 from entity.comm import Comm
 from util.txt_read import load_word_list
@@ -33,17 +33,30 @@ def main():
     data = pd.DataFrame(doc_vec)
     data_zs = (data - data.mean()) / data.std()
 
-    k = 10  # 类数
-    iteration = 500  # 最大迭代次数
-    km_model = KMeans(n_clusters=k, n_jobs=4, max_iter=iteration)
+    # k = 5  # 类数
+    # iteration = 500  # 最大迭代次数
+    # km_model = KMeans(n_clusters=k, n_jobs=4, max_iter=iteration)
+    #
+    # # 训练/拟合模型
+    # km_model.fit(data_zs)
+    #
+    # # 输出每个类别样本个数
+    # # print(pd.Series(km_model.labels_).value_counts())
+    #
+    # labels = km_model.labels_  # 获取样本的聚类标签
 
-    # 训练/拟合模型
-    km_model.fit(data_zs)
+    # ------------------------------------------------
+    # 尝试均值漂移（Mean Shift）模型
+    # ms_model = MeanShift()
+    # ms_model.fit(data_zs)  # 拟合模型
+    # labels = ms_model.labels_
+    # print(labels)
 
-    # 输出每个类别样本个数
-    # print(pd.Series(km_model.labels_).value_counts())
-
-    labels = km_model.labels_  # 获取样本的聚类标签
+    # ------------------------------------------------
+    # 尝试AP聚类
+    ap_model = AffinityPropagation()
+    ap_model.fit(data_zs)
+    labels = ap_model.labels_
 
     # 按标签分类存放在字典中
     comm_cluster = {}
@@ -57,7 +70,8 @@ def main():
     for label, cluster in comm_cluster.items():
         print(f"Label{label}: ")
         for count, text in enumerate(cluster):
-            print(f"Text {count}: "+ text)
+            print(f"Text {count}: " + text)
+        print("-------------------------------")
         print()
 
 
