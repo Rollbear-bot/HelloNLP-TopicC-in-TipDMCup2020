@@ -9,7 +9,7 @@ from util.xl_read import read_xl_by_line
 
 
 def fetch_default_stop_words():
-    """加载默认通用词库"""
+    """加载默认停用词库"""
     return load_word_list("../resources/special-words/stop_words.txt")
 
 
@@ -33,6 +33,11 @@ def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None):
             comments = read_xl_by_line("../resources/xls/e2.xlsx")
         if ds_name == "example_4":
             comments = read_xl_by_line("../resources/xls/e4.xlsx")
+        if ds_name == "example_all":
+            # 三个附件语料的集合
+            return fetch_data("example_2", cut_all, mode, stop_words) \
+                   + fetch_data("example_3", cut_all, mode, stop_words) \
+                   + fetch_data("example_4", cut_all, mode, stop_words)
 
     comm_dict = Comm.generate_comm_dict(comments, cut_all=cut_all, stop_words_lt=stop_words)
 
