@@ -4,7 +4,6 @@
 # @Filename: named_entity_recognition.py
 # 命名实体识别、词性标注
 
-import gensim
 import pandas as pd  # 矩阵处理工具
 from gensim.models import Word2Vec  # Word2Vec词嵌入模型
 from sklearn.cluster import MeanShift  # 均值漂移模型
@@ -19,15 +18,16 @@ from util.xl_read import read_xl_by_line  # 读取xlsx表格的方法
 
 def main():
     rows = read_xl_by_line("../resources/xls/e3.xlsx")  # 以元组的形式加载附件表
-    lines = [row[2] + "。" + row[4] for row in rows]  # 将“主题”和“留言详情”这两项拼接起来，放在一个列表中
+    # todo::聚类时是否使用“留言主题”？
+    lines = [row[2] + "。" + row[4] for row in rows]
 
     stop = fetch_default_stop_words()  # 默认停用词
     stop.extend(["\t", "\n", ""])  # 附加的停用词
 
     # 要求的特定词性
-    word_type = ["n", "s", "ns", "nt", "nw", "nz",
-                 "a", "an",
-                 "LOC", "ORG"]
+    word_type = ["n", "s", "ns", "nt", "nw", "nz",  # 各种名词
+                 "a", "an",  # 形容词
+                 "LOC", "ORG"]  # 专有地名、组织机构名
 
     # 挑出指定词性的词，将他们放在列表中（每个留言文本是一个词列表）
     specific_only = pick_specific_type_words(text=lines, types=word_type, stop_words=stop)
@@ -36,8 +36,12 @@ def main():
     # 对特定词性的词加权后进行文本聚类
 
     # 加载之前训练的Word2Vec模型
-    wv_model = gensim.models.KeyedVectors.load_word2vec_format(
-        "../resources/word2vec_build_on_all_text", binary=False)
+    # wv_model = gensim.models.KeyedVectors.load_word2vec_format(
+    #     "../resources/word2vec_build_on_all_text", binary=False)
+
+    # 从附件3的语料中建立word2vec模型
+    line_sents = fetch_data("example_3", stop_words=stop, mode="lines")
+    wv_model = Word2Vec(line_sents, size=400, window=5, sg=1, min_count=5)
 
     # 计算所有文档（词列表）的文档向量，对特定词性的词加权,特定词性的词的权重设置为2（其他词默认权重为1）
     weight = {key: 1 for key in set([word for words in specific_only for word in words])}
@@ -51,8 +55,12 @@ def main():
     # 均值漂移（Mean Shift）模型
     ms_model = MeanShift()
     ms_model.fit(data_zs)  # 拟合模型
-    labels = ms_model.labels_
 
+    # Kmeans模型
+    # km_model = KMeans(n_clusters=5, max_iter=500)
+    # km_model.fit(data_zs)
+
+    labels = ms_model.labels_
     output_cluster(labels, lines)
 
 

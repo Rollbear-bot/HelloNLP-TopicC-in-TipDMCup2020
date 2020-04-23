@@ -4,13 +4,14 @@
 # @Filename: test_sqlite.py
 
 import sqlite3
-from entity.label import LabelNode
+
 from util.xl_read import read_labels_by_lines
 
 
 def main():
+    # todo::封装成数据库方法
     table_name = "Labels"
-    rows = read_labels_by_lines("../xls/e1.xlsx")
+    rows = read_labels_by_lines("../../../resources/xls/e1.xlsx")
 
     # 使用sqlite数据库将标签持久化
     conn = sqlite3.connect("../resources/test.db")

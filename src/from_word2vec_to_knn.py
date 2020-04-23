@@ -15,7 +15,7 @@ from sklearn.neighbors import KNeighborsClassifier  # 最近邻分类器
 import util.txt_read
 import util.xl_read
 from entity.comm import Comm
-from util.vec import get_doc_vec
+from util.vec import doc_vec
 
 
 def main():
@@ -74,7 +74,7 @@ def main():
         # word2vec_build_on_all_text.wv.save_word2vec_format("../resources/word2vec_build_on_all_text", binary=False)
 
         # 计算所有评论的文档向量
-        comms_vec = [get_doc_vec(
+        comms_vec = [doc_vec(
                         comm_dict_2[row[0]].seg_topic + comm_dict_2[row[0]].seg_detail,
                         word2vec_build_on_all_text)
                      for row in comments]

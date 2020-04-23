@@ -27,24 +27,24 @@ class Comm(object):
 
         self.seg_topic = None  # 分词后的留言主题
         self.seg_detail = None  # 分词后的留言详情
-        self.seg_reply = None  # 分词后的留言回复classmethod
+        self.seg_reply = None  # 分词后的留言回复
 
     def load_from_row(self, row):
         """从行元组加载实例"""
         if len(row) == 6:
             # 六元组是附件二的格式
             self.comm_id, self.user_id, self.topic, \
-            self.date, self.detail, self.fir_lev_label = row
+                self.date, self.detail, self.fir_lev_label = row
         if len(row) == 7:
             # 附件三和附件四都是七元组
             if isinstance(row[5], int):
                 # 附件三的第六列是点赞数，是整型数据
                 self.comm_id, self.user_id, self.topic, \
-                self.date, self.detail, self.likes, self.treads = row
+                    self.date, self.detail, self.likes, self.treads = row
             else:
                 # 附件四
                 self.comm_id, self.user_id, self.topic, \
-                self.date, self.detail, self.reply, self.reply_date = row
+                    self.date, self.detail, self.reply, self.reply_date = row
 
     def cut(self, cut_all=False, stop_words_lt=None):
         """分词并去停用词"""
