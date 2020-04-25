@@ -29,7 +29,7 @@ class Comm(object):
         self.seg_detail = None  # 分词后的留言详情
         self.seg_reply = None  # 分词后的留言回复
 
-    def load_from_row(self, row):
+    def load_from_row(self, row, full_dataset=False):
         """从行元组加载实例"""
         if len(row) == 6:
             # 六元组是附件二的格式
@@ -39,8 +39,14 @@ class Comm(object):
             # 附件三和附件四都是七元组
             if isinstance(row[5], int):
                 # 附件三的第六列是点赞数，是整型数据
-                self.comm_id, self.user_id, self.topic, \
-                    self.date, self.detail, self.likes, self.treads = row
+                if full_dataset is False:
+                    # 示例数据集
+                    self.comm_id, self.user_id, self.topic, \
+                        self.date, self.detail, self.likes, self.treads = row
+                else:
+                    # 完整数据集，“点赞”“反对”这两列的排列顺序和示例数据集不同
+                    self.comm_id, self.user_id, self.topic, \
+                        self.date, self.detail, self.treads, self.likes = row
             else:
                 # 附件四
                 self.comm_id, self.user_id, self.topic, \
@@ -102,13 +108,13 @@ class Comm(object):
 
     # 从行生成Comm字典的方法
     @classmethod
-    def generate_comm_dict(cls, row_lt, cut_all=False, stop_words_lt=None):
+    def generate_comm_dict(cls, row_lt, cut_all=False, stop_words_lt=None, full_dataset=False):
         """从数据行生成key为留言编号，value为Comm对象的字典
         并对字典中的Comm对象执行分词、去停用词等预处理"""
         comm_dict = {}
         for row in row_lt:
             c = Comm()
-            c.load_from_row(row)
+            c.load_from_row(row, full_dataset=full_dataset)
             c.cut(cut_all=cut_all, stop_words_lt=stop_words_lt)
             comm_dict[row[0]] = c
         return comm_dict
