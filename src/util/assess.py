@@ -7,6 +7,11 @@
 import time
 from datetime import datetime
 
+import numpy
+
+from entity.comm import Comm
+from util.vec import *
+
 
 def _process_date_str(date_str: str):
     """将字符格式的日期信息转化为可计算的日期对象"""
@@ -27,8 +32,8 @@ class HotspotAssess:
     # 热度参数权重（类字段）
     w_n_text = 1  # 簇中的文本数量所占权重
     w_n_like = 1  # 点赞数的权重
-    w_n_tread = -1  # “踩”的数量的权重（一般认为是负值）
-    w_date_variance = 0  # 簇内文本发布日期的方差权重（一般为负值）
+    w_n_tread = -1  # 反对的数量的权重（一般认为是负值）
+    w_date_variance = -0.00001  # 簇内文本发布日期的方差权重（一般为负值）
 
     def __init__(self, cluster: list):
         """
@@ -55,4 +60,36 @@ class HotspotAssess:
 
 class ReplyAssess:
     """回复文本评价"""
-    pass
+    # 参数权重（类字段）
+    w_similarity = 1
+    w_integrity = 1
+    w_interpretability = 1
+
+    def __init__(self, comm: Comm, model):
+        """
+        构造方法，解析一个带有回复的留言对象
+        :param comm:
+        :param model:
+        """
+        # 抽取以经过预处理的文本
+        topic = comm.seg_topic  # 留言主题
+        detail = comm.seg_detail  # 留言详情
+        reply = comm.seg_reply  # 回复
+
+        # 将“主题”和“留言详情”共同作为留言文本，计算文档向量
+        text_vec = doc_vec(topic + detail, model)
+        # 计算回复文本的文档向量
+        reply_vec = doc_vec(reply, model)
+
+        # 基于numpy矩阵，计算相似度（向量空间中的欧式距离）
+        self.__similarity = numpy.linalg.norm(text_vec - reply_vec)
+
+        self.__integrity = 0  # 完整性
+        self.__interpretability = 0  # 可解释性
+
+    @property
+    def score(self):
+        """回复评价得分"""
+        return ReplyAssess.w_similarity * self.__similarity \
+            + ReplyAssess.w_integrity * self.__integrity \
+            + ReplyAssess.w_interpretability * self.__interpretability
