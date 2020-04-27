@@ -60,7 +60,8 @@ class Comm(object):
 
         # 分别对主题、详情、回复字段分词
         self.seg_topic = jieba.lcut(self.topic, cut_all=cut_all)
-        self.seg_detail = jieba.lcut(self.detail, cut_all=cut_all)
+        # “详情”一列，使用strip方法跳过空白字符
+        self.seg_detail = jieba.lcut(self.detail.strip().rstrip(), cut_all=cut_all)
         if self.reply is not None:
             self.seg_reply = jieba.lcut(self.reply, cut_all=cut_all)
 
