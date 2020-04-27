@@ -4,6 +4,7 @@
 # @Filename: dataset.py
 
 from entity.comm import Comm
+from util.timer import timer
 from util.txt_read import load_word_list
 from util.xl_read import read_xl_by_line
 
@@ -18,13 +19,15 @@ def fetch_default_stop_words():
     return load_word_list("../resources/special-words/stop_words.txt")
 
 
-def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None):
+@timer
+def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None, remove_duplicates=True):
     """
     加载数据集
     :param ds_name: 数据集名
     :param cut_all: 是否启用全模式
     :param mode: 字典或line sentences
     :param stop_words: 停用词表
+    :param remove_duplicates: 是否针对“留言详情”去重
     :return: list or dict
     """
     stop_words = [] if stop_words is None else stop_words
@@ -60,6 +63,10 @@ def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None):
                                             cut_all=cut_all,
                                             stop_words_lt=stop_words,
                                             full_dataset=True)
+    if remove_duplicates is True:
+        # 针对“留言详情”去重（利用集合的特性实现去重）
+        detail_key_dict = {elem.detail: elem for key, elem in comm_dict.items()}
+        comm_dict = {elem.comm_id: elem for key, elem in detail_key_dict.items()}
 
     if mode == 'dict':
         return comm_dict
