@@ -12,21 +12,30 @@ from gensim.models.word2vec import LineSentence
 from sklearn import metrics  # 模型评价工具
 from sklearn.neighbors import KNeighborsClassifier  # 最近邻分类器
 
-import util.txt_read
-import util.xl_read
-from entity.comm import Comm
+from util.dataset import *
 from util.vec import doc_vec
+
+sheet_2_input = "../resources/full_dataset/full_dataset_sheet_2.xlsx"  # 附件2的输入路径
+sheet_3_input = "../resources/full_dataset/full_dataset_sheet_3.xlsx"  # 附件3的输入路径
+sheet_4_input = "../resources/full_dataset/full_dataset_sheet_4.xlsx"  # 附件4的输入路径
+stop_words_input = "../resources/special-words/stop_words.txt"  # 停用词表输入路径
+
+wv_model_output = "../resources/wv_model/wv_model_full_dataset_0502"  # word2vec模型输出路径
+wv_model_tmp_output = "../resources/wv_model/wv_model_sheet_2_only_0502"  # 备用模型输出路径
+line_sentence_output = "../resources/temp/full_dataset_text.txt"  # 行文本输出路径
+sheet_2_line_sentence_output = "../resources/temp/sheet_2_text.txt"  # 附件表2行文本输出路径
 
 
 def main():
     # -----------------调参窗口------------------
     # 列出要尝试的所有参数取值
-    wv_size_lt = [400]  # list(range(300, 800, 50))
-    wv_window_lt = [24, 27]  # list(range(3, 21, 3))
+    wv_size_lt = [550]
+    wv_window_lt = [18]
     wv_sg_lt = [1]
-    wv_min_count_lt = [12]  # list(range(1, 9))
-    knn_leaf_size_lt = [20, 40]  # list(range(20, 50, 10))
-    knn_n_neighbors_lt = [6, 10, 12]  # list(range(3, 10, 3))
+    wv_min_count_lt = [8]
+    knn_leaf_size_lt = [30]
+    knn_n_neighbors_lt = [12]
+    cut_all = False
 
     # 填充参数
     params = []
@@ -47,11 +56,24 @@ def main():
     # ------------------------------------------
 
     # 读取表2
-    comments = util.xl_read.read_xl_by_line("../resources/xls/e2.xlsx")
+    comments = read_xl_by_line(sheet_2_input)
+    # 读取附件三、四到元组
+    sheet_3 = read_xl_by_line(sheet_3_input)
+    sheet_4 = read_xl_by_line(sheet_4_input)
 
     # 分词、去停用词并生成表2的评论对象字典
-    stop_words = util.txt_read.load_word_list("../resources/special-words/stop_words.txt")
-    comm_dict_2 = Comm.generate_comm_dict(comments, cut_all=True, stop_words_lt=stop_words)
+    stop_words = load_word_list(stop_words_input)
+    comm_dict_2 = Comm.generate_comm_dict(comments, cut_all=cut_all, stop_words_lt=stop_words)
+    comm_dict_3 = Comm.generate_comm_dict(sheet_3, cut_all=cut_all, stop_words_lt=stop_words)
+    comm_dict_4 = Comm.generate_comm_dict(sheet_4, cut_all=cut_all, stop_words_lt=stop_words)
+
+    # 将三个表分好词的语料输出到文本文件
+    text_file = open(line_sentence_output, "w", encoding="utf8")
+    for d in (comm_dict_2, comm_dict_3, comm_dict_4):
+        for c in d.values():
+            text_file.write(" ".join(c.seg_topic) + "\n")  # 留言主题
+            text_file.write(" ".join(c.seg_detail) + "\n")  # 留言详情
+    text_file.close()
 
     # 表2中涉及的所有一级标签
     target_names = list(set([row[5] for row in comments]))
@@ -64,9 +86,8 @@ def main():
         # 测试每一种参数组合下的效果
 
         # 训练word embedding模型（从表2、3、4的混合语料构建）
-        # sg=1，使用Skip-Gram模式
         word2vec_build_on_all_text = \
-            Word2Vec(LineSentence("../resources/line_sents.txt"),
+            Word2Vec(LineSentence(line_sentence_output),
                      size=param['wv_size'],
                      window=param['wv_window'],
                      sg=param['wv_sg'],
