@@ -82,7 +82,11 @@ def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None, remove_
 
 
 def show_data_analysis(**kwargs):
-    """数据集分析"""
+    """
+    数据集分析，输出到控制台
+    :param kwargs: 与fetch_data一致的参数
+    :return: None
+    """
     data = fetch_data(mode='dict', remove_duplicates=False, **kwargs)  # 加载数据集
     dataset_name = kwargs['ds_name']  # 数据集名称
     raw_num_record = len(list(data.values()))  # 记录条数（去重前）
@@ -113,34 +117,81 @@ def show_data_analysis(**kwargs):
         min_reply_len = min([len(c.reply) for c in data.values()])
         avg_reply_len = sum([len(c.reply) for c in data.values()]) / num_record
 
-    print(f'''
-        数据分析（预处理前）
-        数据集名称：{dataset_name}
-        记录条数（去重前）：{raw_num_record}
-        记录条数（去重后）：{num_record}
-        ----------------------------
-        留言长度
-        最大：{max_comm_len}
-        最小：{min_comm_len}
-        平均：{avg_comm_len}
-        ----------------------------
-        留言主题长度
-        最大：{max_topic_len}
-        最小：{min_topic_len}
-        平均：{avg_topic_len}
-        ----------------------------
-        点赞数量
-        最大：{max_num_like}
-        最小：{min_num_like}
-        平均：{avg_num_like}
-        ----------------------------
-        反对数量
-        最大：{max_num_tread}
-        最小：{min_num_tread}
-        平均：{avg_num_tread}
-        ----------------------------
-        答复信息长度
-        最大：{max_reply_len}
-        最小：{min_reply_len}
-        平均：{avg_reply_len}
-        ''')
+    # ------------------- 对预处理后的数据分析 -------------------
+    max_num_seg_comm = max([len(c.seg_detail) for c in data.values()])  # （每条留言中的）最大词数
+    min_num_seg_comm = min([len(c.seg_detail) for c in data.values()])  # 最小词数
+    avg_num_seg_comm = sum([len(c.seg_detail) for c in data.values()]) / num_record  # 平均词数
+
+    max_word_len = max([len(word) for c in data.values() for word in c.seg_detail])
+    min_word_len = min([len(word) for c in data.values() for word in c.seg_detail])
+    # 计算平均词长应该除以总词数
+    avg_word_len = sum([len(word) for c in data.values() for word in c.seg_detail]) \
+                   / sum([len(c.seg_detail) for c in data.values()])
+
+    max_num_seg_reply = min_num_seg_reply = avg_num_seg_reply \
+        = max_reply_word_len = min_reply_word_len = avg_reply_word_len = None
+    if list(data.values())[0].reply is not None:  # 只有附件四需要此分析
+        max_num_seg_reply = max([len(c.seg_reply) for c in data.values()])
+        min_num_seg_reply = min([len(c.seg_reply) for c in data.values()])
+        avg_num_seg_reply = sum([len(c.seg_reply) for c in data.values()]) / num_record
+
+        max_reply_word_len = max([len(word) for c in data.values() for word in c.seg_reply])
+        min_reply_word_len = min([len(word) for c in data.values() for word in c.seg_reply])
+        # 计算平均词长应该除以总词数
+        avg_reply_word_len = sum([len(word) for c in data.values() for word in c.seg_reply]) \
+                             / sum([len(c.seg_detail) for c in data.values()])
+
+    print(
+        f'''
+数据分析，cut_all={kwargs['cut_all']}
+数据集名称：{dataset_name}
+记录条数（去重前）：{raw_num_record}
+记录条数（去重后）：{num_record}
+----------------------------
+**预处理前**
+留言长度
+最大：{max_comm_len}
+最小：{min_comm_len}
+平均：{avg_comm_len}
+----------------------------
+留言主题长度
+最大：{max_topic_len}
+最小：{min_topic_len}
+平均：{avg_topic_len}
+----------------------------
+点赞数量
+最大：{max_num_like}
+最小：{min_num_like}
+平均：{avg_num_like}
+----------------------------
+反对数量
+最大：{max_num_tread}
+最小：{min_num_tread}
+平均：{avg_num_tread}
+----------------------------
+答复信息长度
+最大：{max_reply_len}
+最小：{min_reply_len}
+平均：{avg_reply_len}
+----------------------------
+**预处理后**
+留言中的词数
+最大：{max_num_seg_comm}
+最小：{min_num_seg_comm}
+平均：{avg_num_seg_comm}
+----------------------------
+留言词长
+最大：{max_word_len}
+最小：{min_word_len}
+平均：{avg_word_len}
+----------------------------
+答复词数
+最大：{max_num_seg_reply}
+最小：{min_num_seg_reply}
+平均：{avg_num_seg_reply}
+----------------------------
+答复词长
+最大：{max_reply_word_len}
+最小：{min_reply_word_len}
+平均：{avg_reply_word_len}
+''')
