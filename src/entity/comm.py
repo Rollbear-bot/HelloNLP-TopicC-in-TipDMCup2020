@@ -73,7 +73,12 @@ class Comm(object):
         # “详情”一列，使用strip方法跳过空白字符
         self.seg_detail = jieba.lcut(self.detail, cut_all=cut_all)
         if self.reply is not None:
-            self.seg_reply = jieba.lcut(self.reply, cut_all=cut_all)
+            # 清除答复文本中的通用开头语
+            start_words = ["您好！", "收悉。", "回复如下："]
+            index = max([self.reply.find(w) for w in start_words])
+            cleaned_text = self.reply[index:]
+            # 分词
+            self.seg_reply = jieba.lcut(cleaned_text, cut_all=cut_all)
 
         # 去停用词
         if stop_words_lt is not None:
