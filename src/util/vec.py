@@ -30,7 +30,10 @@ def doc_vec(doc: list, model):
         except KeyError:
             words_num -= 1
             continue
-    return vec_sum / words_num
+    if words_num == 0:  # 空白文本或无意义文本
+        return 0
+    else:
+        return vec_sum / words_num
 
 
 def doc_vec_with_weight(doc: list, model, weight: dict, default_weight=1):
