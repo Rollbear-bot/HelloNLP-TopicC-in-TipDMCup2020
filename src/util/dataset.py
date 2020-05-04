@@ -70,6 +70,14 @@ def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None, remove_
                                             cut_all=cut_all,
                                             stop_words_lt=stop_words,
                                             full_dataset=True)
+
+    if ds_name == "sheet_4_labeled":  # 加载手工标注后的附件四
+        comments = read_xl_by_line("../resources/full_dataset/sheet_4_labeled.xlsx")
+        comm_dict = Comm.generate_comm_dict(comments,
+                                            cut_all=cut_all,
+                                            stop_words_lt=stop_words,
+                                            full_dataset=True)
+
     if remove_duplicates is True:
         # 针对“留言详情”去重（利用集合的特性实现去重）
         detail_key_dict = {elem.detail: elem for key, elem in comm_dict.items()}
