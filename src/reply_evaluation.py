@@ -4,9 +4,11 @@
 # @Filename: reply_evaluation.py
 # 答复信息评价（基于部分手工标注）
 
+import sklearn
 from gensim.models import Word2Vec
 from sklearn.externals import joblib  # 模型保存与加载
 from sklearn.semi_supervised import LabelPropagation  # 标记传播模型
+from sklearn.semi_supervised.label_propagation import LabelSpreading
 
 from util.dataset import *
 from util.vec import doc_vec
@@ -38,17 +40,30 @@ def main():
     # print("model is loaded.")
 
     # 测试完整性指标的半监督分类
-    xy = [(doc_vec(c.seg_reply, model=wv_model), c.integrity) for c in comm.values()]
+    xy = [(doc_vec(c.seg_reply, model=wv_model), c.interpretability) for c in unlabeled.values()]
     x = [t[0] for t in xy]
     y = [t[1] for t in xy]
 
-    cls = LabelPropagation()
-    cls.fit(x, y)
-    joblib.dump(cls, "../resources/label_propagation_cls")
+    # 从已标注的数据中分出一部分作为测试集
+    xy_labeled = [(doc_vec(c.seg_reply, model=wv_model), c.interpretability) for c in labeled.values()]
+    x_labeled = [t[0] for t in xy_labeled]
+    y_labeled = [t[1] for t in xy_labeled]
+    # 从100个标注样本中分出30个作为测试集
+    x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x_labeled, y_labeled, test_size=0.3)
 
-    x_test = [doc_vec(c.seg_reply, wv_model) for c in unlabeled.values()]
-    y_test = [c.integrity for c in unlabeled.values()]
-    print("Accuracy:%f" % cls.score(x_test, y_test))
+    # 将已标注的数据与未标注的数据混合成为训练集
+    x_train += x
+    y_train += y
+
+    # 训练标记传播模型
+    clf = LabelPropagation()
+    clf = LabelSpreading(max_iter=100, kernel='rbf', gamma=0.1)
+    clf.fit(x_train, y_train)
+    joblib.dump(clf, "../resources/label_spreading_interpretability_clf")
+
+    x_test = [doc_vec(c.seg_reply, wv_model) for c in labeled.values()]
+    y_test = [c.integrity for c in labeled.values()]
+    print(f"Accuracy:{clf.score(x_test, y_test)}")  # 完整性指标精度：0.95，可解释性指标精度：0.72
 
 
 if __name__ == '__main__':
