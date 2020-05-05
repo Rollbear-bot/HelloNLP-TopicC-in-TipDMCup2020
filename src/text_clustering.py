@@ -9,10 +9,10 @@ import time
 import gensim
 import pandas as pd  # 矩阵处理工具
 from gensim.models import Word2Vec  # Word2Vec词嵌入模型
-from sklearn.externals import joblib  # 模型保存与加载
+from sklearn.cluster import MeanShift
 
-from util.assess import HotspotAssess
 from util.dataset import fetch_data, fetch_default_stop_words
+from util.evaluation import HotspotEvaluation
 from util.vec import doc_vec
 from util.xl_read import read_xl_by_line
 
@@ -21,7 +21,7 @@ def main():
     comments_with_likes = read_xl_by_line("../resources/full_dataset/full_dataset_sheet_3.xlsx")  # 加载附件三
     stop_words = fetch_default_stop_words()
     # 分词、去停用词、并生成字典
-    comm_dict_3 = fetch_data("full_dataset_sheet_3", stop_words=stop_words, cut_all=True)
+    comm_dict_3 = fetch_data("full_dataset_sheet_3", stop_words=stop_words, cut_all=True, remove_duplicates=False)
     print("data loading completed." + str(time.asctime(time.localtime(time.time()))))
 
     # ----------------------------------------
@@ -61,20 +61,20 @@ def main():
     # joblib.dump(km_model, "../resources/km_model_sheet_3_wv")
 
     # 加载训练好的K-Means模型
-    km_model = joblib.load("../resources/km_model_sheet_3_wv")
+    # km_model = joblib.load("../resources/km_model_sheet_3_wv")
 
     # 输出每个类别样本个数
-    print(pd.Series(km_model.labels_).value_counts())
-    labels = km_model.labels_  # 获取样本的聚类标签
+    # print(pd.Series(km_model.labels_).value_counts())
+    # labels = km_model.labels_  # 获取样本的聚类标签
 
     # ------------------------------------------------
     # 聚类方案二：均值漂移（Mean Shift）模型
-    # ms_model = MeanShift()
-    # ms_model.fit(data_zs)  # 拟合模型
+    ms_model = MeanShift(bandwidth=11)
+    ms_model.fit(data_zs)  # 拟合模型
 
     # 加载训练好的Mean-Shift模型
     # ms_model = joblib.load("../resources/ms_model_sheet_3_wv")
-    # labels = ms_model.labels_
+    labels = ms_model.labels_
 
     # 保存模型到resources目录
     # joblib.dump(ms_model, "../resources/ms_model_sheet_3_wv")
@@ -102,10 +102,13 @@ def main():
     #     #     print(row[5])
     #     print("-------------------------------")
 
+    # 仅考虑留言数量大于等于3的簇，剩下的视为“离群点”
+    more_valuable_clusters = [cluster for cluster in comm_cluster.values() if len(cluster) >= 0]
     # 根据热度排序，选出热度前五的簇
-    top_5 = sorted(list(comm_cluster.values()), key=lambda c: HotspotAssess(c).score)
+    sorted_clusters = sorted(more_valuable_clusters, key=lambda c: HotspotEvaluation(c).score)
     print("ranking completed." + str(time.asctime(time.localtime(time.time()))))
-    for cluster in top_5:
+
+    for cluster in sorted_clusters:
         print(cluster)
 
 
