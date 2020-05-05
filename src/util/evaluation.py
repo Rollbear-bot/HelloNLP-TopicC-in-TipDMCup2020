@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 # @Time: 2020/4/24 7:56
 # @Author: Rollbear
-# @Filename: assess.py
+# @Filename: evaluation.py
 # 评价模块
 
 import time
 from datetime import datetime
-
-import numpy
 
 from entity.comm import Comm
 from util.vec import *
@@ -27,13 +25,13 @@ def _process_date_str(date_str: str):
     return date
 
 
-class HotspotAssess:
+class HotspotEvaluation:
     """文本热度评估"""
     # 热度参数权重（类字段）
-    w_n_text = 1  # 簇中的文本数量所占权重
+    w_n_text = 100  # 簇中的文本数量所占权重
     w_n_like = 1  # 点赞数的权重
-    w_n_tread = -1  # 反对的数量的权重（一般认为是负值）
-    w_date_variance = -0.00001  # 簇内文本发布日期的方差权重（一般为负值）
+    w_n_tread = -30  # 反对的数量的权重（一般认为是负值）
+    w_date_variance = 0  # 簇内文本发布日期的方差权重（一般为负值）
 
     def __init__(self, cluster: list):
         """
@@ -52,13 +50,13 @@ class HotspotAssess:
 
     @property
     def score(self):
-        return HotspotAssess.w_n_text * self.n_text \
-            + HotspotAssess.w_n_like * self.n_like \
-            + HotspotAssess.w_n_tread * self.n_tread \
-            + HotspotAssess.w_date_variance * self.date_variance
+        return HotspotEvaluation.w_n_text * self.n_text \
+               + HotspotEvaluation.w_n_like * self.n_like \
+               + HotspotEvaluation.w_n_tread * self.n_tread \
+               + HotspotEvaluation.w_date_variance * self.date_variance
 
 
-class ReplyAssess:
+class ReplyEvaluation:
     """回复文本评价"""
     # 参数权重（类字段）
     w_similarity = 1
@@ -71,7 +69,7 @@ class ReplyAssess:
         :param comm:
         :param model:
         """
-        # 抽取以经过预处理的文本
+        # 抽取经过预处理的文本
         topic = comm.seg_topic  # 留言主题
         detail = comm.seg_detail  # 留言详情
         reply = comm.seg_reply  # 回复
@@ -84,12 +82,16 @@ class ReplyAssess:
         # 基于numpy矩阵，计算相似度（向量空间中的欧式距离）
         self.__similarity = numpy.linalg.norm(text_vec - reply_vec)
 
-        self.__integrity = 0  # 完整性
-        self.__interpretability = 0  # 可解释性
+        self.__integrity = 0  # todo::完整性，尝试使用手工标注的方式训练
+        self.__interpretability = 0  # todo::可解释性，同上
 
     @property
     def score(self):
         """回复评价得分"""
-        return ReplyAssess.w_similarity * self.__similarity \
-            + ReplyAssess.w_integrity * self.__integrity \
-            + ReplyAssess.w_interpretability * self.__interpretability
+        return ReplyEvaluation.w_similarity * self.__similarity \
+               + ReplyEvaluation.w_integrity * self.__integrity \
+               + ReplyEvaluation.w_interpretability * self.__interpretability
+
+
+def integrity_evaluation(reply_text: str, model):
+    pass
