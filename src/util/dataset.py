@@ -87,6 +87,8 @@ def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None, remove_
         return comm_dict
     if mode == 'lines':
         return [comm_dict[row[0]].seg_topic + comm_dict[row[0]].seg_detail for row in comments]
+    if mode == 'reply_lines':
+        return [comm_dict[row[0]].seg_reply for row in comments]
 
 
 def show_data_analysis(**kwargs):
