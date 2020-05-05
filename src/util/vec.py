@@ -4,6 +4,8 @@
 # @Filename: vec.py
 # 和向量有关的工具
 
+import numpy
+
 
 class UnexpectedList(Exception):
     """传入了无效的列表"""
@@ -31,7 +33,7 @@ def doc_vec(doc: list, model):
             words_num -= 1
             continue
     if words_num == 0:  # 空白文本或无意义文本
-        return 0
+        return numpy.array([0] * model.vector_size)
     else:
         return vec_sum / words_num
 
