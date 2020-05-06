@@ -4,6 +4,7 @@
 # @Filename: evaluation.py
 # 评价模块
 
+import math
 import time
 from datetime import datetime
 
@@ -28,10 +29,10 @@ def _process_date_str(date_str: str):
 class HotspotEvaluation:
     """文本热度评估"""
     # 热度参数权重（类字段）
-    w_n_text = 100  # 簇中的文本数量所占权重
+    w_n_text = 8  # 簇中的文本数量所占权重
     w_n_like = 1  # 点赞数的权重
     w_n_tread = -30  # 反对的数量的权重（一般认为是负值）
-    w_date_variance = 0  # 簇内文本发布日期的方差权重（一般为负值）
+    w_date_variance = -1  # 簇内文本发布日期的方差权重（一般为负值）
 
     def __init__(self, cluster: list):
         """
@@ -53,7 +54,7 @@ class HotspotEvaluation:
         return HotspotEvaluation.w_n_text * self.n_text \
                + HotspotEvaluation.w_n_like * self.n_like \
                + HotspotEvaluation.w_n_tread * self.n_tread \
-               + HotspotEvaluation.w_date_variance * self.date_variance
+               + HotspotEvaluation.w_date_variance * math.log(self.date_variance+1, 10)
 
 
 class ReplyEvaluation:
