@@ -18,6 +18,8 @@ def draw_cluster_key_word(cluster: list):
     :return: list of words，关键词列表
     """
     stop = fetch_default_stop_words()  # 停用词表
+    stop.extend(["", " ", "\n", "\t", "*"])  # 附加几个停用词
+
     sents = [jieba.lcut(row[2] + "。" + row[4], cut_all=True) for row in cluster]  # 分词
     sents = [[word for word in sent if word not in stop] for sent in sents]  # 去停用词
 
