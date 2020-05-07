@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # @Time: 2020/3/28 17:19
 # @Author: Rollbear
-# @Filename: xl_read.py
+# @Filename: xl.py
 # excel表格读取工具
 
-import openpyxl
+import openpyxl  # 读excel
+from pandas import DataFrame  # 写excel
 
 from entity.label import LabelNode
 from .timer import timer
@@ -78,3 +79,23 @@ def read_xl_by_line(path: str, skip_first_line=True):
             break
         res_rows.append(row_tuple)
     return res_rows
+
+
+def write_rows(path: str, rows: list, title: tuple):
+    """
+    将元组写入Excel表格
+    :param path: Excel表路径
+    :param rows: 元组列表
+    :param title: 表头
+    """
+    data = {key: [row[index] for row in rows] for index, key in enumerate(title)}
+
+    # data生成的格式为：
+    # data = {
+    #    'name': ['张三', '李四', '王五'],
+    #    'age': [11, 12, 13],
+    #    'sex': ['男', '女', '男']
+    # }
+
+    df = DataFrame(data)
+    df.to_excel(path)  # 存储到表格
