@@ -8,8 +8,16 @@ import math
 import time
 from datetime import datetime
 
+from sklearn.externals import joblib  # 模型保存与加载
+
 from entity.comm import Comm
 from util.vec import *
+
+
+class InitException(Exception):
+    """初始化异常"""
+    def __str__(self):
+        return "资源未加载"
 
 
 def _process_date_str(date_str: str):
@@ -63,17 +71,31 @@ class ReplyEvaluation:
     w_similarity = 1
     w_integrity = 1
     w_interpretability = 1
+    w_timeliness = 1
+
+    # 指标评价器（分类器）
+    integrity_clf = None  # 完整性指标分类器
+    interpretability_clf = None  # 可解释性指标分类器
 
     def __init__(self, comm: Comm, model):
         """
         构造方法，解析一个带有回复的留言对象
-        :param comm:
-        :param model:
+        :param comm: 留言对象
+        :param model: 词向量化模型
         """
+        # 如果评价模型还未加载，则不能进行评价
+        if ReplyEvaluation.interpretability_clf is None \
+                or ReplyEvaluation.integrity_clf is None:
+            raise InitException
+        
         # 抽取经过预处理的文本
         topic = comm.seg_topic  # 留言主题
         detail = comm.seg_detail  # 留言详情
         reply = comm.seg_reply  # 回复
+
+        # 时间信息
+        comm_date = _process_date_str(comm.date)
+        reply_date = _process_date_str(comm.reply_date)
 
         # 将“主题”和“留言详情”共同作为留言文本，计算文档向量
         text_vec = doc_vec(topic + detail, model)
@@ -82,17 +104,28 @@ class ReplyEvaluation:
 
         # 基于numpy矩阵，计算相似度（向量空间中的欧式距离）
         self.__similarity = numpy.linalg.norm(text_vec - reply_vec)
+        # 计算时间差，作为时效性指标
+        self.__timeliness = reply_date - comm_date
 
-        self.__integrity = 0  # todo::完整性，尝试使用手工标注的方式训练
-        self.__interpretability = 0  # todo::可解释性，同上
+        # 使用评价模型对后两个指标打分
+        self.__integrity = ReplyEvaluation.integrity_clf.predict(reply_vec)[0]
+        self.__interpretability = ReplyEvaluation.interpretability_clf.predict(reply_vec)[0]
+
+    @classmethod
+    def load_integrity_clf(cls, model_path: str):
+        """加载完整性指标分类模型"""
+        ReplyEvaluation.integrity_clf = joblib.load(model_path)
+
+    @classmethod
+    def load_interpretability_clf(cls, model_path: str):
+        """加载可解释性指标分类模型"""
+        ReplyEvaluation.interpretability_clf = joblib.load(model_path)
 
     @property
     def score(self):
         """回复评价得分"""
         return ReplyEvaluation.w_similarity * self.__similarity \
                + ReplyEvaluation.w_integrity * self.__integrity \
-               + ReplyEvaluation.w_interpretability * self.__interpretability
+               + ReplyEvaluation.w_interpretability * self.__interpretability \
+               + ReplyEvaluation.w_timeliness * self.__timeliness
 
-
-def integrity_evaluation(reply_text: str, model):
-    pass
