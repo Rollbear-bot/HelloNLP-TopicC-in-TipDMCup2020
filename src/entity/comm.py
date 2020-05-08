@@ -76,7 +76,7 @@ class Comm(object):
             # 清除答复文本中的通用开头语
             start_words = ["您好！", "收悉。", "回复如下："]
             index = max([self.reply.find(w) for w in start_words])
-            cleaned_text = self.reply[index:]
+            cleaned_text = self.reply[index+3:]
             # 分词
             self.seg_reply = jieba.lcut(cleaned_text, cut_all=cut_all)
 
