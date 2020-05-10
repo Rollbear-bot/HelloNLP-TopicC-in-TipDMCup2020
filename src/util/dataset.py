@@ -20,6 +20,11 @@ def fetch_default_stop_words():
     return load_word_list(stop_words_input)
 
 
+def fetch_knn_target_names():
+    """加载与knn模型配套的标签名称"""
+    return load_word_list(knn_model_target_names)
+
+
 @timer
 def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None, remove_duplicates=True):
     """

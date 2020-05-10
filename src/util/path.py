@@ -10,6 +10,7 @@ sheet_4_input = "../resources/full_dataset/full_dataset_sheet_4.xlsx"  # 附件�
 sheet_4_labeled_input = "../resources/full_dataset/sheet_4_labeled.xlsx"  # 带人工标注的附件四
 stop_words_input = "../resources/special-words/stop_words.txt"  # 停用词表的存储路径
 
+predict_sheet_input_path = None  # 待预测的表
 cluster_sheet_path = "./top5_cluster_sheet.xlsx"  # 热点问题表的存储路径（输出路径）
 detail_sheet_path = "./detail_sheet.xlsx"  # 留言明细表的存储路径（输出路径）
 
