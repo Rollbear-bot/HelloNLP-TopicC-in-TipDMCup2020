@@ -98,4 +98,4 @@ def write_rows(path: str, rows: list, title: tuple):
     # }
 
     df = DataFrame(data)
-    df.to_excel(path)  # 存储到表格
+    df.to_excel(path, index=False)  # 存储到表格
