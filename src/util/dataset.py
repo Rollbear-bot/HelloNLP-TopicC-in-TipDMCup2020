@@ -4,9 +4,10 @@
 # @Filename: dataset.py
 
 from entity.comm import Comm
+from util.path import *
 from util.timer import timer
 from util.txt_read import load_word_list
-from util.xl_read import read_xl_by_line
+from util.xl import read_xl_by_line
 
 
 class UnknownDataset(Exception):
@@ -16,7 +17,7 @@ class UnknownDataset(Exception):
 
 def fetch_default_stop_words():
     """加载默认停用词库"""
-    return load_word_list("../resources/special-words/stop_words.txt")
+    return load_word_list(stop_words_input)
 
 
 @timer
@@ -58,11 +59,11 @@ def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None, remove_
 
     if ds_name.startswith("full_dataset"):
         if ds_name == "full_dataset_sheet_2":
-            comments = read_xl_by_line("../resources/full_dataset/full_dataset_sheet_2.xlsx")
+            comments = read_xl_by_line(sheet_2_input)
         elif ds_name == "full_dataset_sheet_3":
-            comments = read_xl_by_line("../resources/full_dataset/full_dataset_sheet_3.xlsx")
+            comments = read_xl_by_line(sheet_3_input)
         elif ds_name == "full_dataset_sheet_4":
-            comments = read_xl_by_line("../resources/full_dataset/full_dataset_sheet_4.xlsx")
+            comments = read_xl_by_line(sheet_4_input)
         else:
             raise UnknownDataset
         # 完整数据集的附件三的列排列顺序与示例数据不同，因此附加full_dataset参数进行适应
@@ -72,7 +73,7 @@ def fetch_data(ds_name: str, cut_all=True, mode='dict', stop_words=None, remove_
                                             full_dataset=True)
 
     if ds_name == "sheet_4_labeled":  # 加载手工标注后的附件四
-        comments = read_xl_by_line("../resources/full_dataset/sheet_4_labeled.xlsx")
+        comments = read_xl_by_line(sheet_4_labeled_input)
         comm_dict = Comm.generate_comm_dict(comments,
                                             cut_all=cut_all,
                                             stop_words_lt=stop_words,
