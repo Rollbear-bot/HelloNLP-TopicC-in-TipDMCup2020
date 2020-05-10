@@ -29,4 +29,8 @@ def draw_cluster_key_word(cluster: list):
     # 训练LDA模型
     lda_model = LdaModel(doc_term_matrix, num_topics=1, id2word=dictionary, passes=1)
 
-    return lda_model.show_topics()
+    # 解析出主题中概率最大的前6个词
+    key_words = [word for index, word in
+                 enumerate(lda_model.show_topics()[0][1].split("\""))
+                 if index in [1, 3, 5, 7, 9, 11]]
+    return key_words
