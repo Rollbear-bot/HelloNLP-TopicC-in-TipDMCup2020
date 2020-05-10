@@ -2,22 +2,16 @@
 # @Time: 2020/5/7 23:13
 # @Author: Rollbear
 # @Filename: train_wv.py
-# 0.01667  |  11.69    |  13.58    |  6.451    |  176.3    |  36.91
 
 from gensim.models import Word2Vec
 from gensim.models.word2vec import LineSentence
 
 from entity.comm import Comm
+from util.path import *
 from util.txt_read import load_word_list
 from util.xl import read_xl_by_line
 
-sheet_2_input = "../resources/full_dataset/full_dataset_sheet_2.xlsx"
-sheet_3_input = "../resources/full_dataset/full_dataset_sheet_3.xlsx"
-sheet_4_input = "../resources/full_dataset/full_dataset_sheet_4.xlsx"
-stop_words_input = "../resources/special-words/stop_words.txt"
 cut_all = True
-line_sentence_output = "../resources/temp/full_dataset_cut_all.txt"
-word2vec_model_path = "../resources/wv_model/wv_model_0507"
 
 
 def main():
