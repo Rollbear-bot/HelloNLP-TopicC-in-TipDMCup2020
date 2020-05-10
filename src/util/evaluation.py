@@ -4,7 +4,6 @@
 # @Filename: evaluation.py
 # 评价模块
 
-import math
 import time
 from datetime import datetime
 
@@ -40,16 +39,18 @@ class HotspotEvaluation:
     w_n_text = 8  # 簇中的文本数量所占权重
     w_n_like = 1  # 点赞数的权重
     w_n_tread = -30  # 反对的数量的权重（一般认为是负值）
-    w_date_variance = -1  # 簇内文本发布日期的方差权重（一般为负值）
+    w_date_variance = 1  # 簇内文本发布日期的方差倒数权重
 
     def __init__(self, cluster: list):
         """
         在一个聚类完成的类别中给出热度评分
         :param cluster: list of tuple(7)
         """
+        self.cluster = cluster
         self.n_text = len(cluster)
-        self.n_like = sum([row[5] for row in cluster])
-        self.n_tread = sum([row[6] for row in cluster])
+        # 注意完整数据集“点赞数”属性的位置与示例数据集不同
+        self.n_like = sum([row[6] for row in cluster])
+        self.n_tread = sum([row[5] for row in cluster])
 
         # 发布日期的方差以“日”为最小计算单位
         date_avg = sum([_process_date_str(row[3]) for row in cluster]) / len(cluster)
@@ -58,11 +59,18 @@ class HotspotEvaluation:
         ) / len(cluster)
 
     @property
+    def date_range_str(self):
+        sorted_date = sorted([row[3] for row in self.cluster],
+                             key=lambda date: _process_date_str(date))
+        return f"{str(sorted_date[0]).split()[0]} 至 {str(sorted_date[-1]).split()[0]}"
+
+    @property
     def score(self):
-        return HotspotEvaluation.w_n_text * self.n_text \
+        sc = HotspotEvaluation.w_n_text * self.n_text \
                + HotspotEvaluation.w_n_like * self.n_like \
                + HotspotEvaluation.w_n_tread * self.n_tread \
-               + HotspotEvaluation.w_date_variance * math.log(self.date_variance+1, 10)
+               + HotspotEvaluation.w_date_variance * ((1/self.date_variance) if self.date_variance != 0 else 0)
+        return round(sc, 2)
 
 
 class ReplyEvaluation:
@@ -103,13 +111,13 @@ class ReplyEvaluation:
         reply_vec = doc_vec(reply, model)
 
         # 基于numpy矩阵，计算相似度（向量空间中的欧式距离）
-        self.__similarity = numpy.linalg.norm(text_vec - reply_vec)
-        # 计算时间差，作为时效性指标
-        self.__timeliness = reply_date - comm_date
+        self.__similarity = -1/(numpy.linalg.norm(text_vec - reply_vec))
+        # 计算时间差，其倒数作为时效性指标
+        self.__timeliness = (1/(reply_date - comm_date) if reply_date != comm_date else 0)
 
         # 使用评价模型对后两个指标打分
-        self.__integrity = ReplyEvaluation.integrity_clf.predict(reply_vec)[0]
-        self.__interpretability = ReplyEvaluation.interpretability_clf.predict(reply_vec)[0]
+        self.__integrity = ReplyEvaluation.integrity_clf.predict([reply_vec])[0]
+        self.__interpretability = ReplyEvaluation.interpretability_clf.predict([reply_vec])[0]
 
     @classmethod
     def load_integrity_clf(cls, model_path: str):
@@ -124,8 +132,9 @@ class ReplyEvaluation:
     @property
     def score(self):
         """回复评价得分"""
-        return ReplyEvaluation.w_similarity * self.__similarity \
+        score = ReplyEvaluation.w_similarity * self.__similarity \
                + ReplyEvaluation.w_integrity * self.__integrity \
                + ReplyEvaluation.w_interpretability * self.__interpretability \
                + ReplyEvaluation.w_timeliness * self.__timeliness
+        return round(score, 2)
 
