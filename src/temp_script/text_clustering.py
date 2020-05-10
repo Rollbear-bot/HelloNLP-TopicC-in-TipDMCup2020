@@ -14,11 +14,11 @@ from sklearn.cluster import MeanShift
 from util.dataset import fetch_data, fetch_default_stop_words
 from util.evaluation import HotspotEvaluation
 from util.vec import doc_vec
-from util.xl_read import read_xl_by_line
+from util.xl import read_xl_by_line
 
 
 def main():
-    comments_with_likes = read_xl_by_line("../resources/full_dataset/full_dataset_sheet_3.xlsx")  # 加载附件三
+    comments_with_likes = read_xl_by_line("../../resources/full_dataset/full_dataset_sheet_3.xlsx")  # 加载附件三
     stop_words = fetch_default_stop_words()
     # 分词、去停用词、并生成字典
     comm_dict_3 = fetch_data("full_dataset_sheet_3", stop_words=stop_words, cut_all=True, remove_duplicates=False)
@@ -103,7 +103,7 @@ def main():
     #     print("-------------------------------")
 
     # 仅考虑留言数量大于等于3的簇，剩下的视为“离群点”
-    more_valuable_clusters = [cluster for cluster in comm_cluster.values() if len(cluster) >= 0]
+    more_valuable_clusters = [cluster for cluster in comm_cluster.values() if len(cluster) >= 3]
     # 根据热度排序，选出热度前五的簇
     sorted_clusters = sorted(more_valuable_clusters, key=lambda c: HotspotEvaluation(c).score)
     print("ranking completed." + str(time.asctime(time.localtime(time.time()))))

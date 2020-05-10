@@ -7,7 +7,6 @@
 import sklearn
 from gensim.models import Word2Vec
 from sklearn.externals import joblib  # 模型保存与加载
-from sklearn.semi_supervised import LabelPropagation  # 标记传播模型
 from sklearn.semi_supervised.label_propagation import LabelSpreading
 
 from util.dataset import *
@@ -39,7 +38,6 @@ def main():
     # wv_model = gensim.models.KeyedVectors.load_word2vec_format("../resources/wv_reply_text", binary=False)
     # print("model is loaded.")
 
-    # 测试完整性指标的半监督分类
     xy = [(doc_vec(c.seg_reply, model=wv_model), c.interpretability) for c in unlabeled.values()]
     x = [t[0] for t in xy]
     y = [t[1] for t in xy]
@@ -56,14 +54,20 @@ def main():
     y_train += y
 
     # 训练标记传播模型
-    clf = LabelPropagation()
-    clf = LabelSpreading(max_iter=100, kernel='rbf', gamma=0.1)
+    # clf = LabelPropagation(gamma=30)  # 模型1
+    clf = LabelSpreading()  # 模型2, 第二组参数：max_iter=100, kernel='rbf', gamma=0.1
     clf.fit(x_train, y_train)
     joblib.dump(clf, "../resources/label_spreading_interpretability_clf")
 
-    x_test = [doc_vec(c.seg_reply, wv_model) for c in labeled.values()]
-    y_test = [c.integrity for c in labeled.values()]
-    print(f"Accuracy:{clf.score(x_test, y_test)}")  # 完整性指标精度：0.95，可解释性指标精度：0.72
+    # x_test = [doc_vec(c.seg_reply, wv_model) for c in labeled.values()]
+    # y_test = [c.integrity for c in labeled.values()]
+    print(f"Accuracy:{clf.score(x_test, y_test)}")
+    # 完整性指标精度：0.95（默认参数下），可解释性指标精度：0.91（默认参数）；0.72~0.75（参数组合2）
+    # 结论：完整性指标的分类应该使用模型一，可解释性的分类使用模型二
+
+    # 完整性：0.76-0.86（模型1，gamma=30）
+    # 可解释性：0.63-0.75（模型1）
+    # 模型2 0.7-0.77
 
 
 if __name__ == '__main__':

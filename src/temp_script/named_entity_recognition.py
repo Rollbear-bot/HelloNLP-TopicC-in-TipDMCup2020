@@ -13,11 +13,11 @@ from util.dataset import fetch_default_stop_words  # 加载停用词的方法
 from util.output import output_cluster
 from util.vec import doc_vec_with_weight  # 计算文档向量的方法
 from util.word_type import pick_specific_type_words  # 选择特定词性词语的方法
-from util.xl_read import read_xl_by_line  # 读取xlsx表格的方法
+from util.xl import read_xl_by_line  # 读取xlsx表格的方法
 
 
 def main():
-    rows = read_xl_by_line("../resources/xls/e3.xlsx")  # 以元组的形式加载附件表
+    rows = read_xl_by_line("../../resources/xls/e3.xlsx")  # 以元组的形式加载附件表
     # todo::聚类时是否使用“留言主题”？
     lines = [row[2] + "。" + row[4] for row in rows]
 

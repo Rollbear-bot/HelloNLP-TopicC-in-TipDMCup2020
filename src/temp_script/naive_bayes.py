@@ -14,14 +14,14 @@ from sklearn.naive_bayes import MultinomialNB
 
 from entity.comm import Comm
 from util.txt_read import load_word_list
-from util.xl_read import read_xl_by_line
+from util.xl import read_xl_by_line
 
 
 def main():
     # 构造向量化工具
     count_vect = CountVectorizer()
-    comments = read_xl_by_line("../resources/xls/e2.xlsx")  # 留言文本
-    stop_words = load_word_list("../resources/special-words/stop_words.txt")  # 停用词
+    comments = read_xl_by_line("../../resources/xls/e2.xlsx")  # 留言文本
+    stop_words = load_word_list("../../resources/special-words/stop_words.txt")  # 停用词
     comm_dict_2 = Comm.generate_comm_dict(comments, True, stop_words)
 
     line_sents = [comm_dict_2[row[0]].seg_topic + comm_dict_2[row[0]].seg_detail for row in comments]

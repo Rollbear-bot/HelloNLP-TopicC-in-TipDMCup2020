@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# @Time: 2020/4/14 12:12
+# @Time: 2020/5/3 8:43
 # @Author: Rollbear
-# @Filename: from_word2vec_to_knn.py
-# 如何完成从Word2Vec向量到KNN的输入矩阵的转换？
+# @Filename: random_search.py
+# 随机搜索参数优化
 
 import time
 
@@ -24,18 +24,19 @@ wv_model_output = "../resources/wv_model/wv_model_full_dataset_0502"  # word2vec
 wv_model_tmp_output = "../resources/wv_model/wv_model_sheet_2_only_0502"  # 备用模型输出路径
 line_sentence_output = "../resources/temp/full_dataset_text.txt"  # 行文本输出路径
 sheet_2_line_sentence_output = "../resources/temp/sheet_2_text.txt"  # 附件表2行文本输出路径
+log_output = "../resources/log/test_wv_size_log_0503.txt"  # 日志输出路径
 
 
 def main():
     # -----------------调参窗口------------------
     # 列出要尝试的所有参数取值
-    wv_size_lt = [550]
+    cut_all = False
+    wv_size_lt = [700]
     wv_window_lt = [18]
     wv_sg_lt = [1]
     wv_min_count_lt = [8]
     knn_leaf_size_lt = [30]
     knn_n_neighbors_lt = [12]
-    cut_all = False
 
     # 填充参数
     params = []
@@ -92,13 +93,14 @@ def main():
                      window=param['wv_window'],
                      sg=param['wv_sg'],
                      min_count=param['wv_min_count'])
+        # todo::存储模型
         # word2vec_build_on_all_text.wv.save_word2vec_format("../resources/word2vec_build_on_all_text", binary=False)
 
         # 计算所有评论的文档向量
         comms_vec = [doc_vec(
-                        comm_dict_2[row[0]].seg_topic + comm_dict_2[row[0]].seg_detail,
-                        word2vec_build_on_all_text)
-                     for row in comments]
+            comm_dict_2[row[0]].seg_topic + comm_dict_2[row[0]].seg_detail,
+            word2vec_build_on_all_text)
+            for row in comments]
 
         # 分割训练集和测试集
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(comms_vec, targets, test_size=0.3)
@@ -113,7 +115,7 @@ def main():
 
         # 生成测试日志
         accuracy = metrics.accuracy_score(y_test, predicted)
-        log = f"Sample({index+1}/{len(params)})\n" \
+        log = f"Sample({index + 1}/{len(params)})\n" \
               + "Param: " + str(param) + "\n" \
               + f"Accuracy: {accuracy}\n"
         logs.append([log, accuracy, str(param)])
@@ -125,7 +127,7 @@ def main():
         print(log)
 
     # 所有参数组合的测试结束后，输出日志到文本文件
-    file = open("./test_model_log.txt", 'w', encoding='utf8')
+    file = open(log_output, 'w', encoding='utf8')
     file.writelines([log[0] for log in logs])
 
     # 计算所测试的参数组合中的最优解，生成测试报告
