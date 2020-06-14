@@ -5,7 +5,7 @@
 
 import sqlite3
 
-from util.xl_read import read_labels_by_lines
+from util.xl import read_labels_by_lines
 
 
 def main():

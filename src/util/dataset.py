@@ -2,11 +2,13 @@
 # @Time: 2020/4/21 22:15
 # @Author: Rollbear
 # @Filename: dataset.py
+import gensim
 
 from entity.comm import Comm
 from util.path import *
 from util.timer import timer
 from util.txt_read import load_word_list
+from util.vec import doc_vec
 from util.xl import read_xl_by_line
 
 
@@ -23,6 +25,34 @@ def fetch_default_stop_words():
 def fetch_knn_target_names():
     """加载与knn模型配套的标签名称"""
     return load_word_list(knn_model_target_names)
+
+
+def fetch_issue1_dataset():
+    """
+    加载留言分类问题的默认数据集
+    :return: tuple(文档向量, 标签标志, 标签名)
+    """
+    stop = fetch_default_stop_words()
+    comments = read_xl_by_line(sheet_2_input)
+
+    # 加载训练好的wv模型
+    wv_model = gensim.models.KeyedVectors.load_word2vec_format(
+        word2vec_model_path, binary=False)
+
+    # 预处理，并构造留言对象
+    comm_dict = Comm.generate_comm_dict(comments,
+                                        stop_words_lt=stop,
+                                        cut_all=True,
+                                        full_dataset=True)
+    # 表2中涉及的所有一级标签
+    target_names = list(set([row[5] for row in comments]))
+    # 将表2中标注的所有一级标签转化成数字表示（target_names中的index）
+    targets = [target_names.index(row[5]) for row in comments]
+
+    # 计算文档向量，向量化模型使用预训练的Word2Vec
+    vec = [doc_vec(comm_dict[row[0]].seg_detail, model=wv_model) for row in comments]
+
+    return vec, targets, target_names
 
 
 @timer
